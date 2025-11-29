@@ -1,0 +1,259 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to get user role (safely handle when user doc doesn't exist)
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc.data.role;
+    }
+
+    // Helper function to check if user role exists
+    function userRoleExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && userRoleExists() && getUserRole() == 'admin';
+    }
+
+    // Helper function to check if user is warden
+    function isWarden() {
+      return isAuthenticated() && userRoleExists() && getUserRole() == 'warden';
+    }
+
+    // Helper function to check if user is mess manager
+    function isMessManager() {
+      return isAuthenticated() && userRoleExists() && getUserRole() == 'messManager';
+    }
+
+    // Helper function to check if user is staff
+    function isStaff() {
+      return isAuthenticated() && userRoleExists() && getUserRole() == 'staff';
+    }
+
+    // Helper function to check if user is student
+    function isStudent() {
+      return isAuthenticated() && userRoleExists() && getUserRole() == 'student';
+    }
+
+    // Helper function to check if user is admin or warden
+    function isAdminOrWarden() {
+      return isAdmin() || isWarden();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+
+      // Admin can read all users
+      allow read: if isAdmin();
+
+      // IMPORTANT: Allow new users to create their own user document during registration
+      // This allows self-registration while preventing users from creating documents for others
+      allow create: if isAuthenticated() &&
+                      request.auth.uid == userId;
+
+      // Users can update their own data (limited fields - cannot change role)
+      allow update: if isAuthenticated() &&
+                      request.auth.uid == userId &&
+                      (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+
+      // Admin can update any user (including role changes)
+      allow update: if isAdmin();
+
+      // Admin can delete users
+      allow delete: if isAdmin();
+    }
+
+    // Students collection
+    match /students/{studentId} {
+      // Students can read their own data
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/students/$(studentId)).data.uid == request.auth.uid;
+
+      // Admin and Warden can read all students
+      allow read: if isAdminOrWarden();
+
+      // Admin and Warden can create students
+      // ALSO allow authenticated users to create their own student record (for self-registration)
+      allow create: if isAdminOrWarden() ||
+                      (isAuthenticated() && request.resource.data.uid == request.auth.uid);
+
+      // Admin and Warden can update students
+      allow update: if isAdminOrWarden();
+
+      // Only Admin can delete students
+      allow delete: if isAdmin();
+    }
+
+    // Rooms collection
+    match /rooms/{roomId} {
+      // All authenticated users can read rooms
+      allow read: if isAuthenticated();
+
+      // Admin and Warden can create/update/delete rooms
+      allow create, update: if isAdminOrWarden();
+      allow delete: if isAdmin();
+    }
+
+    // Attendance collection
+    match /attendance/{attendanceId} {
+      // Students can read their own attendance
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/attendance/$(attendanceId)).data.studentId == request.auth.uid;
+
+      // Admin, Warden, and Staff can read all attendance
+      allow read: if isAdminOrWarden() || isStaff();
+
+      // Admin, Warden, and Staff can create/update attendance
+      allow create, update: if isAdminOrWarden() || isStaff();
+
+      // Only Admin can delete attendance
+      allow delete: if isAdmin();
+    }
+
+    // Visitor logs collection
+    match /visitor_logs/{logId} {
+      // Students can read visitor logs for themselves
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/visitor_logs/$(logId)).data.studentVisited == request.auth.uid;
+
+      // Admin, Warden, and Staff can read all visitor logs
+      allow read: if isAdminOrWarden() || isStaff();
+
+      // Admin, Warden, and Staff can create/update visitor logs
+      allow create, update: if isAdminOrWarden() || isStaff();
+
+      // Only Admin can delete visitor logs
+      allow delete: if isAdmin();
+    }
+
+    // Mess menu collection
+    match /mess_menu/{menuId} {
+      // All authenticated users can read menu
+      allow read: if isAuthenticated();
+
+      // Admin and Mess Manager can create/update menu
+      allow create, update: if isAdmin() || isMessManager();
+
+      // Only Admin can delete menu
+      allow delete: if isAdmin();
+    }
+
+    // Mess attendance collection
+    match /mess_attendance/{attendanceId} {
+      // Students can read their own mess attendance
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/mess_attendance/$(attendanceId)).data.studentId == request.auth.uid;
+
+      // Students can create their own mess attendance (marking present/absent)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.studentId == request.auth.uid;
+
+      // Admin and Mess Manager can read all mess attendance
+      allow read: if isAdmin() || isMessManager();
+
+      // Admin and Mess Manager can create/update mess attendance
+      allow create, update: if isAdmin() || isMessManager();
+
+      // Only Admin can delete mess attendance
+      allow delete: if isAdmin();
+    }
+
+    // Mess inventory collection
+    match /mess_inventory/{inventoryId} {
+      // Admin and Mess Manager can read inventory
+      allow read: if isAdmin() || isMessManager();
+
+      // Admin and Mess Manager can create/update inventory
+      allow create, update: if isAdmin() || isMessManager();
+
+      // Only Admin can delete inventory
+      allow delete: if isAdmin();
+    }
+
+    // Payments collection
+    match /payments/{paymentId} {
+      // Students can read their own payments
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/payments/$(paymentId)).data.studentId == request.auth.uid;
+
+      // Admin can read all payments
+      allow read: if isAdmin();
+
+      // Admin can create/update/delete payments
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Leaves collection
+    match /leaves/{leaveId} {
+      // Students can read their own leaves
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/leaves/$(leaveId)).data.studentId == request.auth.uid;
+
+      // Students can create their own leave requests
+      allow create: if isAuthenticated() &&
+                      request.resource.data.studentId == request.auth.uid &&
+                      request.resource.data.status == 'pending';
+
+      // Admin and Warden can read all leaves
+      allow read: if isAdminOrWarden();
+
+      // Admin and Warden can update leaves (approve/reject)
+      allow update: if isAdminOrWarden();
+
+      // Only Admin can delete leaves
+      allow delete: if isAdmin();
+    }
+
+    // Complaints collection
+    match /complaints/{complaintId} {
+      // Students can read their own complaints
+      allow read: if isAuthenticated() &&
+                    get(/databases/$(database)/documents/complaints/$(complaintId)).data.studentId == request.auth.uid;
+
+      // Students can create their own complaints
+      allow create: if isAuthenticated() &&
+                      request.resource.data.studentId == request.auth.uid &&
+                      request.resource.data.status == 'pending';
+
+      // Admin and Warden can read all complaints
+      allow read: if isAdminOrWarden();
+
+      // Admin and Warden can update complaints (assign, resolve)
+      allow update: if isAdminOrWarden();
+
+      // Only Admin can delete complaints
+      allow delete: if isAdmin();
+    }
+
+    // Hostels collection
+    match /hostels/{hostelId} {
+      // All authenticated users can read hostel info
+      allow read: if isAuthenticated();
+
+      // Only Admin can create/update/delete hostels
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Archives collection (for graduated/left students)
+    match /archives/{studentId} {
+      // Admin and Warden can read archives
+      allow read: if isAdminOrWarden();
+
+      // Only Admin can create/delete archives
+      allow create, delete: if isAdmin();
+
+      // Archives should not be updated
+      allow update: if false;
+    }
+  }
+}
