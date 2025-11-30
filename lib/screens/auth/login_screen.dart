@@ -82,10 +82,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.home_work,
-                    size: 80,
-                    color: AppColors.primary,
+                  Image.asset(
+                    'assets/logo.png',
+                    width: 100,
+                    height: 100,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to icon if logo fails to load
+                      return const Icon(
+                        Icons.home_work,
+                        size: 80,
+                        color: AppColors.primary,
+                      );
+                    },
                   ),
                   const SizedBox(height: AppSizes.paddingMedium),
                   Text(

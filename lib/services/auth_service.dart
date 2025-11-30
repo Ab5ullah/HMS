@@ -39,6 +39,12 @@ class AuthService {
 
       final appUser = AppUser.fromFirestore(userDoc);
 
+      // Check if user is blocked
+      if (appUser.status == 'blocked') {
+        await _auth.signOut();
+        throw Exception('Your account has been blocked. Please contact admin.');
+      }
+
       // Check if user is approved
       if (appUser.status == 'pending') {
         await _auth.signOut();
@@ -49,6 +55,9 @@ class AuthService {
         await _auth.signOut();
         throw Exception('Your account has been rejected. Please contact admin.');
       }
+
+      // Record login session for multi-device control
+      await _recordLoginSession(credential.user!.uid);
 
       return appUser;
     } on FirebaseAuthException catch (e) {
@@ -178,6 +187,198 @@ class AuthService {
     await _firestore.collection('users').doc(user.uid).update(updates);
   }
 
+  // Block/Unblock Account Features
+  Future<void> blockUser(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'status': 'blocked',
+        'blockedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      });
+
+      // Add to blocked sessions list
+      await _firestore.collection('blocked_sessions').doc(uid).set({
+        'uid': uid,
+        'blockedAt': Timestamp.now(),
+        'reason': 'Account blocked by admin',
+      });
+    } catch (e) {
+      throw Exception('Failed to block user: ${e.toString()}');
+    }
+  }
+
+  Future<void> unblockUser(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'status': 'active',
+        'blockedAt': FieldValue.delete(),
+        'updatedAt': Timestamp.now(),
+      });
+
+      // Remove from blocked sessions
+      await _firestore.collection('blocked_sessions').doc(uid).delete();
+    } catch (e) {
+      throw Exception('Failed to unblock user: ${e.toString()}');
+    }
+  }
+
+  // Multi-Device Login Control
+  Future<void> _recordLoginSession(String uid) async {
+    try {
+      final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .doc(sessionId)
+          .set({
+        'sessionId': sessionId,
+        'loginTime': Timestamp.now(),
+        'deviceInfo': await _getDeviceInfo(),
+        'isActive': true,
+      });
+
+      // Clean up old sessions (keep only last 5)
+      await _cleanupOldSessions(uid);
+    } catch (e) {
+      // Non-critical, just log
+      print('Failed to record session: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getDeviceInfo() async {
+    // Basic device info - can be enhanced with device_info_plus package
+    return {
+      'platform': 'flutter',
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
+
+  Future<void> _cleanupOldSessions(String uid) async {
+    try {
+      final sessions = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .orderBy('loginTime', descending: true)
+          .get();
+
+      if (sessions.docs.length > 5) {
+        // Delete sessions beyond the 5 most recent
+        for (var i = 5; i < sessions.docs.length; i++) {
+          await sessions.docs[i].reference.delete();
+        }
+      }
+    } catch (e) {
+      print('Failed to cleanup old sessions: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getActiveSessions(String uid) async {
+    try {
+      final sessions = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .where('isActive', isEqualTo: true)
+          .orderBy('loginTime', descending: true)
+          .get();
+
+      return sessions.docs
+          .map((doc) => {
+                'sessionId': doc.id,
+                ...doc.data(),
+              })
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> terminateSession(String uid, String sessionId) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .doc(sessionId)
+          .update({
+        'isActive': false,
+        'terminatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to terminate session: ${e.toString()}');
+    }
+  }
+
+  Future<void> terminateAllOtherSessions(String uid) async {
+    try {
+      final sessions = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('sessions')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      final currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      for (var doc in sessions.docs) {
+        // Keep only the most recent session (current one)
+        if (doc.id != currentSessionId) {
+          await doc.reference.update({
+            'isActive': false,
+            'terminatedAt': Timestamp.now(),
+          });
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to terminate sessions: ${e.toString()}');
+    }
+  }
+
+  // Enhanced Password Management
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = currentUser;
+      if (user == null) throw Exception('No user logged in');
+
+      // Re-authenticate user with current password
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+
+      // Log password change
+      await _firestore.collection('users').doc(user.uid).update({
+        'passwordChangedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      });
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  Future<void> adminResetUserPassword(String uid, String newPassword) async {
+    try {
+      // Note: Firebase Admin SDK required for this in production
+      // This is a placeholder - requires backend implementation
+      throw Exception(
+        'Admin password reset requires Firebase Admin SDK. '
+        'Please use the password reset email feature instead.',
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
@@ -192,6 +393,8 @@ class AuthService {
         return 'Password is too weak';
       case 'user-disabled':
         return 'This user has been disabled';
+      case 'requires-recent-login':
+        return 'Please log in again to perform this action';
       default:
         return 'Authentication error: ${e.message}';
     }

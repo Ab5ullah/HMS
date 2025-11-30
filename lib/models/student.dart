@@ -5,6 +5,7 @@ class Student {
   final String uid;
   final String name;
   final String email;
+  final String rollNo;
   final String? phoneNumber;
   final String? roomId;
   final String? profileImage;
@@ -34,6 +35,7 @@ class Student {
     required this.uid,
     required this.name,
     required this.email,
+    required this.rollNo,
     this.phoneNumber,
     this.roomId,
     this.profileImage,
@@ -66,6 +68,7 @@ class Student {
       uid: data['uid'] ?? '',
       name: data['name'] ?? '',
       email: data['email'] ?? '',
+      rollNo: data['rollNo'] ?? '',
       phoneNumber: data['phoneNumber'],
       roomId: data['roomId'],
       profileImage: data['profileImage'],
@@ -97,6 +100,7 @@ class Student {
       'uid': uid,
       'name': name,
       'email': email,
+      'rollNo': rollNo,
       'phoneNumber': phoneNumber,
       'roomId': roomId,
       'profileImage': profileImage,
@@ -126,6 +130,7 @@ class Student {
   Student copyWith({
     String? name,
     String? email,
+    String? rollNo,
     String? phoneNumber,
     String? roomId,
     String? profileImage,
@@ -153,6 +158,7 @@ class Student {
       uid: uid,
       name: name ?? this.name,
       email: email ?? this.email,
+      rollNo: rollNo ?? this.rollNo,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       roomId: roomId ?? this.roomId,
       profileImage: profileImage ?? this.profileImage,

@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/responsive.dart';
 import 'edit_profile_screen.dart';
-import 'change_password_screen.dart';
+import '../common/security_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -97,13 +97,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _SettingsTile(
-            icon: Icons.lock,
-            title: 'Change Password',
-            subtitle: 'Update your account password',
+            icon: Icons.security,
+            title: 'Security Settings',
+            subtitle: 'Manage password, sessions, and security',
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+                MaterialPageRoute(builder: (context) => const SecuritySettingsScreen()),
               );
             },
           ),

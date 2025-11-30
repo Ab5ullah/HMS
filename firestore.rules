@@ -71,15 +71,42 @@ service cloud.firestore {
 
       // Admin can delete users
       allow delete: if isAdmin();
+
+      // Sessions subcollection - for tracking active login sessions
+      match /sessions/{sessionId} {
+        // Users can read their own sessions
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+
+        // Users can create their own sessions (during login)
+        allow create: if isAuthenticated() && request.auth.uid == userId;
+
+        // Users can update their own sessions (during activity updates)
+        allow update: if isAuthenticated() && request.auth.uid == userId;
+
+        // Users can delete their own sessions (during logout)
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+
+        // Admin can read all sessions
+        allow read: if isAdmin();
+
+        // Admin can delete any session (for force logout)
+        allow delete: if isAdmin();
+      }
     }
 
     // Students collection
     match /students/{studentId} {
-      // Students can read their own data
-      allow read: if isAuthenticated() &&
-                    get(/databases/$(database)/documents/students/$(studentId)).data.uid == request.auth.uid;
+      // Students can read their own data by document ID
+      // For direct document access, check if the uid field matches
+      allow get: if isAuthenticated() &&
+                   resource.data.uid == request.auth.uid;
 
-      // Admin and Warden can read all students
+      // Students can query/list their own data
+      // For queries like where('uid', '==', uid), we can't check resource.data
+      // So we allow list operations for authenticated students (query filters handle the rest)
+      allow list: if isAuthenticated() && isStudent();
+
+      // Admin and Warden can read all students (both get and list)
       allow read: if isAdminOrWarden();
 
       // Admin and Warden can create students

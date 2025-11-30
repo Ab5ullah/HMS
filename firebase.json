@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"hostel-management-system-2b04c","appId":"1:780025051674:android:b91dd04920043b5884efa3","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"hostel-management-system-2b04c","configurations":{"android":"1:780025051674:android:b91dd04920043b5884efa3","ios":"1:780025051674:ios:a17383e365ed330284efa3","macos":"1:780025051674:ios:a17383e365ed330284efa3","web":"1:780025051674:web:72b4770d9555878084efa3","windows":"1:780025051674:web:b0043355f37272e884efa3"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hostel-management-system-2b04c",
+          "appId": "1:780025051674:android:b91dd04920043b5884efa3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hostel-management-system-2b04c",
+          "configurations": {
+            "android": "1:780025051674:android:b91dd04920043b5884efa3",
+            "ios": "1:780025051674:ios:a17383e365ed330284efa3",
+            "macos": "1:780025051674:ios:a17383e365ed330284efa3",
+            "web": "1:780025051674:web:72b4770d9555878084efa3",
+            "windows": "1:780025051674:web:b0043355f37272e884efa3"
+          }
+        }
+      }
+    }
+  }
+}

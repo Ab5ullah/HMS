@@ -13,6 +13,9 @@ import 'complaints_list_screen.dart';
 import 'leaves_list_screen.dart';
 import 'settings_screen.dart';
 import 'pending_users_screen.dart';
+import 'users_management_screen.dart';
+import 'fix_student_uids_screen.dart';
+import 'debug_student_screen.dart';
 import 'main_layout.dart';
 
 class ModernAdminDashboard extends StatefulWidget {
@@ -220,12 +223,13 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard> {
   Widget _buildContent() {
     if (_selectedIndex == 0) return _buildDashboardContent();
     if (_selectedIndex == 1) return const StudentsListScreen();
-    if (_selectedIndex == 2) return const RoomsListScreen();
-    if (_selectedIndex == 3) return const PaymentsListScreen();
-    if (_selectedIndex == 4) return const MessMenuScreen();
-    if (_selectedIndex == 5) return const ComplaintsListScreen();
-    if (_selectedIndex == 6) return const LeavesListScreen();
-    if (_selectedIndex == 7) return const SettingsScreen();
+    if (_selectedIndex == 2) return const PaymentsListScreen();
+    if (_selectedIndex == 3) return const MessMenuScreen();
+    if (_selectedIndex == 4) return _buildMoreScreen();
+    if (_selectedIndex == 5) return const RoomsListScreen();
+    if (_selectedIndex == 6) return const ComplaintsListScreen();
+    if (_selectedIndex == 7) return const LeavesListScreen();
+    if (_selectedIndex == 8) return const SettingsScreen();
     return _buildDashboardContent();
   }
 
@@ -473,5 +477,314 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard> {
       'December',
     ];
     return months[month - 1];
+  }
+
+  Widget _buildMoreScreen() {
+    final user = context.watch<AuthProvider>().currentUser;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: ListView(
+        padding: const EdgeInsets.all(AppSizes.paddingMedium),
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'More Options',
+                  style: AppTextStyles.headlineMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Access additional admin features',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.paddingSmall),
+
+          // Management Section
+          _buildSectionHeader('Management'),
+          ModernCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _buildMoreMenuItem(
+                  icon: Icons.meeting_room_rounded,
+                  title: 'Rooms',
+                  subtitle: 'Manage hostel rooms',
+                  color: AppColors.wardenColor,
+                  onTap: () => setState(() => _selectedIndex = 5),
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.feedback_rounded,
+                  title: 'Complaints',
+                  subtitle: 'Handle student complaints',
+                  color: AppColors.error,
+                  onTap: () => setState(() => _selectedIndex = 6),
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.event_available_rounded,
+                  title: 'Leaves',
+                  subtitle: 'Approve leave requests',
+                  color: AppColors.info,
+                  onTap: () => setState(() => _selectedIndex = 7),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.paddingLarge),
+
+          // User Management Section
+          _buildSectionHeader('User Management'),
+          ModernCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                StreamBuilder<List<dynamic>>(
+                  stream: DatabaseService().getPendingUsers(),
+                  builder: (context, snapshot) {
+                    final count = snapshot.data?.length ?? 0;
+                    return _buildMoreMenuItem(
+                      icon: Icons.pending_actions_rounded,
+                      title: 'Pending Users',
+                      subtitle: count > 0 ? '$count pending approvals' : 'No pending approvals',
+                      color: AppColors.warning,
+                      badge: count > 0 ? count.toString() : null,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PendingUsersScreen(),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.person_search_rounded,
+                  title: 'All Users',
+                  subtitle: 'View and manage all users',
+                  color: AppColors.primary,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UsersManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.bug_report_rounded,
+                  title: 'Debug Student Links',
+                  subtitle: 'Diagnose student-user linking issues',
+                  color: AppColors.warning,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DebugStudentScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.link_rounded,
+                  title: 'Fix Student Links',
+                  subtitle: 'Link students to user accounts',
+                  color: AppColors.info,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FixStudentUidsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.paddingLarge),
+
+          // Settings Section
+          _buildSectionHeader('Account'),
+          ModernCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _buildMoreMenuItem(
+                  icon: Icons.settings_rounded,
+                  title: 'Settings',
+                  subtitle: 'App preferences',
+                  color: AppColors.textSecondary,
+                  onTap: () => setState(() => _selectedIndex = 8),
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.person_rounded,
+                  title: 'Profile',
+                  subtitle: user?.email ?? '',
+                  color: AppColors.primary,
+                  onTap: () => setState(() => _selectedIndex = 8),
+                ),
+                const Divider(height: 1),
+                _buildMoreMenuItem(
+                  icon: Icons.logout_rounded,
+                  title: 'Sign Out',
+                  subtitle: 'Logout from admin account',
+                  color: AppColors.error,
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                            ),
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true && mounted) {
+                      await context.read<AuthProvider>().signOut();
+                      if (mounted) {
+                        Navigator.pushReplacementNamed(context, AppRoutes.login);
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSizes.paddingXLarge),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppSizes.paddingSmall,
+        bottom: AppSizes.paddingSmall,
+      ),
+      child: Text(
+        title,
+        style: AppTextStyles.labelLarge.copyWith(
+          color: AppColors.textSecondary,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoreMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+    String? badge,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingMedium,
+          vertical: AppSizes.paddingMedium,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: AppSizes.paddingMedium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (badge != null) ...[
+              const SizedBox(width: AppSizes.paddingSmall),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: AppSizes.paddingSmall),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

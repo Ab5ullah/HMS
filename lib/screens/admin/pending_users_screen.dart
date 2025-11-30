@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/app_user.dart';
 import '../../services/database_service.dart';
+import '../../services/auth_service.dart';
 import '../../utils/constants.dart';
 import '../../utils/responsive.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -16,6 +17,7 @@ class PendingUsersScreen extends StatefulWidget {
 
 class _PendingUsersScreenState extends State<PendingUsersScreen> {
   final DatabaseService _dbService = DatabaseService();
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {

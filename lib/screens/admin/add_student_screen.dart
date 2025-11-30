@@ -24,6 +24,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _rollNoController = TextEditingController();
   final _phoneController = TextEditingController();
   final _courseController = TextEditingController();
   final _departmentController = TextEditingController();
@@ -39,6 +40,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _rollNoController.dispose();
     _phoneController.dispose();
     _courseController.dispose();
     _departmentController.dispose();
@@ -81,6 +83,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         uid: result.user.uid,
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
+        rollNo: _rollNoController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         hostelId: _hostelId,
         admissionDate: DateTime.now(),
@@ -291,6 +294,19 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: AppSizes.paddingMedium),
+            CustomTextField(
+              controller: _rollNoController,
+              label: 'Roll Number',
+              prefixIcon: Icons.numbers,
+              keyboardType: TextInputType.text,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter roll number';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             CustomTextField(

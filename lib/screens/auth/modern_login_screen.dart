@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../providers/auth_provider.dart';
+import '../../models/user_role.dart';
 import '../../utils/constants.dart';
-import '../../utils/responsive.dart';
 import '../../widgets/common/modern_button.dart';
 import '../../widgets/common/modern_text_field.dart';
 
@@ -19,7 +19,6 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -37,12 +36,13 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
   }
@@ -61,10 +61,50 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      await context.read<AuthProvider>().signIn(
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
+
+      if (!mounted) return;
+
+      if (success) {
+        final user = authProvider.currentUser;
+        if (user != null) {
+          String route;
+          switch (user.role) {
+            case UserRole.admin:
+              route = AppRoutes.adminDashboard;
+              break;
+            case UserRole.warden:
+              route = AppRoutes.wardenDashboard;
+              break;
+            case UserRole.messManager:
+              route = AppRoutes.messManagerDashboard;
+              break;
+            case UserRole.staff:
+              route = AppRoutes.staffDashboard;
+              break;
+            case UserRole.student:
+              route = AppRoutes.studentDashboard;
+              break;
+          }
+          Navigator.of(context).pushReplacementNamed(route);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Login failed'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            ),
+            margin: const EdgeInsets.all(AppSizes.paddingMedium),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,10 +143,7 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.gradientStart,
-                      AppColors.gradientEnd,
-                    ],
+                    colors: [AppColors.gradientStart, AppColors.gradientEnd],
                   ),
                 ),
               ),
@@ -117,7 +154,7 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
             child: Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(
-                  isMobile ? AppSizes.paddingLarge : AppSizes.paddingXXLarge,
+                  isMobile ? AppSizes.paddingXSmall : AppSizes.paddingXXLarge,
                 ),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -140,9 +177,7 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
         constraints: const BoxConstraints(
           maxWidth: 420, // Compact max width
         ),
-        child: isMobile
-            ? _buildMobileCard()
-            : _buildDesktopCard(),
+        child: isMobile ? _buildMobileCard() : _buildDesktopCard(),
       ),
     );
   }
@@ -160,10 +195,10 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
             _buildHeader(),
             const SizedBox(height: AppSizes.paddingXLarge),
             _buildFormFields(),
-            const SizedBox(height: AppSizes.paddingLarge),
+            const SizedBox(height: AppSizes.paddingXLarge),
             _buildSignInButton(),
-            const SizedBox(height: AppSizes.paddingLarge),
-            _buildSignUpPrompt(),
+            const SizedBox(height: AppSizes.paddingMedium),
+            _buildHelpText(),
           ],
         ),
       ),
@@ -196,10 +231,10 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
                 _buildHeader(),
                 const SizedBox(height: AppSizes.paddingXLarge),
                 _buildFormFields(),
-                const SizedBox(height: AppSizes.paddingLarge),
+                const SizedBox(height: AppSizes.paddingXLarge),
                 _buildSignInButton(),
                 const SizedBox(height: AppSizes.paddingMedium),
-                _buildSignUpPrompt(),
+                _buildHelpText(),
               ],
             ),
           ),
@@ -209,26 +244,36 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
   }
 
   Widget _buildLogo() {
-    return Container(
-      width: 64, // Smaller logo
-      height: 64,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.gradientStart, AppColors.gradientEnd],
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.home_work_rounded,
-        color: Colors.white,
-        size: 32,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+      child: Image.asset(
+        'assets/logo.png',
+
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to gradient container with icon
+          return Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.gradientStart, AppColors.gradientEnd],
+              ),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.home_work_rounded,
+              color: Colors.white,
+              size: 40,
+            ),
+          );
+        },
       ),
     );
   }
@@ -237,7 +282,7 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
     return Column(
       children: [
         Text(
-          'Welcome Back',
+          AppStrings.appFullName,
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -246,7 +291,7 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
         ),
         const SizedBox(height: AppSizes.paddingSmall),
         Text(
-          'Sign in to continue to HMS',
+          'Sign in with your credentials provided by admin',
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
@@ -292,48 +337,6 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
             return null;
           },
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        Row(
-          children: [
-            SizedBox(
-              height: 20,
-              width: 20,
-              child: Checkbox(
-                value: _rememberMe,
-                onChanged: (value) {
-                  setState(() => _rememberMe = value ?? false);
-                },
-                activeColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSizes.paddingSmall),
-            Text(
-              'Remember me',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Forgot Password?',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -348,34 +351,11 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
     );
   }
 
-  Widget _buildSignUpPrompt() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Don't have an account? ",
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, AppRoutes.register);
-          },
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(0, 0),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            'Sign Up',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildHelpText() {
+    return Text(
+      "Don't have login credentials? Contact your administrator",
+      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+      textAlign: TextAlign.center,
     );
   }
 }

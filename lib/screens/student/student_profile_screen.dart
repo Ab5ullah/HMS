@@ -46,37 +46,43 @@ class StudentProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingLarge),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: AppColors.studentColor,
-              child: Text(
-                student.name[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.paddingLarge),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: AppColors.studentColor,
+                child: Text(
+                  student.name[0].toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSizes.paddingMedium),
-            Text(
-              student.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Student ID: ${student.studentId}',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: AppSizes.paddingSmall),
-            _buildStatusChip(student.status),
-          ],
+              const SizedBox(height: AppSizes.paddingMedium),
+              Text(
+                student.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Roll No: ${student.rollNo}',
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: AppSizes.paddingSmall),
+              _buildStatusChip(student.status),
+            ],
+          ),
         ),
       ),
     );
@@ -123,6 +129,11 @@ class StudentProfileScreen extends StatelessWidget {
               label: 'Full Name',
               value: student.name,
               icon: Icons.person,
+            ),
+            InfoCard(
+              label: 'Roll Number',
+              value: student.rollNo,
+              icon: Icons.numbers,
             ),
             if (student.dateOfBirth != null)
               InfoCard(

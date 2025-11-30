@@ -41,7 +41,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     try {
       final authProvider = context.read<AuthProvider>();
       final uid = authProvider.user?.uid;
-
+      print("==================== $uid");
       if (uid == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -54,14 +54,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
       // Load student data
       final studentProvider = context.read<StudentProvider>();
+      print('Fetching student with UID: $uid');
       final student = await studentProvider.getStudentByUid(uid);
+      print('Student found: ${student != null ? student.name : 'null'}');
 
       if (student != null && mounted) {
         setState(() => _currentStudent = student);
 
         // Load related data
         if (mounted) {
-          context.read<PaymentProvider>().fetchPayments(studentId: student.studentId);
+          context.read<PaymentProvider>().fetchPayments(
+            studentId: student.studentId,
+          );
           context.read<AttendanceProvider>().fetchAttendance(studentId: uid);
           context.read<ComplaintProvider>().fetchComplaints(studentId: uid);
           context.read<LeaveProvider>().fetchLeaves(studentId: uid);
@@ -70,7 +74,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         // Student profile not found
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Student profile not found. Please contact administration.'),
+            content: Text(
+              'Student profile not found. Please contact administration.',
+            ),
             backgroundColor: AppColors.error,
             duration: Duration(seconds: 5),
           ),
@@ -95,7 +101,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Dashboard'),
@@ -111,26 +117,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _currentStudent == null
-              ? _buildNoProfileState()
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildWelcomeCard(authProvider),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildQuickStats(),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildQuickActions(),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildRecentActivity(),
-                      ],
-                    ),
-                  ),
+          ? _buildNoProfileState()
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeCard(authProvider),
+                    const SizedBox(height: AppSizes.paddingMedium),
+                    _buildQuickStats(),
+                    const SizedBox(height: AppSizes.paddingMedium),
+                    _buildQuickActions(),
+                    const SizedBox(height: AppSizes.paddingMedium),
+                    _buildRecentActivity(),
+                  ],
                 ),
+              ),
+            ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -142,11 +148,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_off_outlined,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.person_off_outlined, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'No Student Profile Found',
@@ -160,10 +162,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             const SizedBox(height: 12),
             Text(
               'Your student profile has not been created yet.\nPlease contact the administration.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -173,7 +172,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.studentColor,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -195,7 +197,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildWelcomeCard(AuthProvider authProvider) {
     return Card(
-      color: AppColors.studentColor.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
         child: Row(
@@ -226,20 +227,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Student ID: ${_currentStudent!.studentId}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                    'Roll No: ${_currentStudent!.rollNo}',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   Text(
-                    _currentStudent!.course != null && _currentStudent!.department != null
+                    _currentStudent!.course != null &&
+                            _currentStudent!.department != null
                         ? '${_currentStudent!.course} - ${_currentStudent!.department}'
-                        : _currentStudent!.course ?? _currentStudent!.department ?? 'Student',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                        : _currentStudent!.course ??
+                              _currentStudent!.department ??
+                              'Student',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
               ),
@@ -279,10 +277,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       children: [
         const Text(
           'Quick Overview',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSizes.paddingSmall),
         GridView.count(
@@ -301,7 +296,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             _buildStatCard(
               'Due Amount',
-              '₹${totalDue.toStringAsFixed(0)}',
+              'PKR ${totalDue.toStringAsFixed(0)}',
               Icons.payment,
               Colors.orange,
             ),
@@ -323,7 +318,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingSmall),
@@ -342,10 +342,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -360,10 +357,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       children: [
         const Text(
           'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSizes.paddingSmall),
         GridView.count(
@@ -381,7 +375,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
               () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => StudentProfileScreen(student: _currentStudent!),
+                  builder: (context) =>
+                      StudentProfileScreen(student: _currentStudent!),
                 ),
               ),
             ),
@@ -446,7 +441,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Widget _buildActionCard(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Card(
       child: InkWell(
         onTap: onTap,
@@ -479,10 +479,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       children: [
         const Text(
           'Recent Activity',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSizes.paddingSmall),
         if (recentComplaints.isEmpty && recentLeaves.isEmpty)
@@ -495,22 +492,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
         else
           Column(
             children: [
-              ...recentComplaints.map((complaint) => Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.report, color: Colors.red),
-                      title: Text(complaint.title),
-                      subtitle: Text(complaint.status),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    ),
-                  )),
-              ...recentLeaves.map((leave) => Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.event_note, color: Colors.blue),
-                      title: Text('${leave.leaveType} Leave'),
-                      subtitle: Text(leave.status),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    ),
-                  )),
+              ...recentComplaints.map(
+                (complaint) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.report, color: Colors.red),
+                    title: Text(complaint.title),
+                    subtitle: Text(complaint.status),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                ),
+              ),
+              ...recentLeaves.map(
+                (leave) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.event_note, color: Colors.blue),
+                    title: Text('${leave.leaveType} Leave'),
+                    subtitle: Text(leave.status),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                ),
+              ),
             ],
           ),
       ],
@@ -536,7 +537,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => StudentProfileScreen(student: _currentStudent!),
+                builder: (context) =>
+                    StudentProfileScreen(student: _currentStudent!),
               ),
             );
             break;
@@ -546,22 +548,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
         }
       },
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.notifications),
           label: 'Notifications',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.logout),
-          label: 'Logout',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Logout'),
       ],
     );
   }

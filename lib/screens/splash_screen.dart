@@ -20,11 +20,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAuthStatus() async {
     try {
+      // Show splash screen for at least 2 seconds
       await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
 
       final authProvider = context.read<AuthProvider>();
+
+      // Wait for auth provider to finish initialization
+      while (!authProvider.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+      }
+
       final user = authProvider.currentUser;
 
       if (user == null) {
@@ -70,10 +78,18 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.home_work,
-              size: 100,
-              color: Colors.white,
+            Image.asset(
+              'assets/logo.png',
+              width: 120,
+              height: 120,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if logo fails to load
+                return const Icon(
+                  Icons.home_work,
+                  size: 100,
+                  color: Colors.white,
+                );
+              },
             ),
             const SizedBox(height: 20),
             Text(

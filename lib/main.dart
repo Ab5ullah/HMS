@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hms/screens/auth/modern_login_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'config/firebase_options.dart';
@@ -101,7 +102,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const SplashScreen(),
-          AppRoutes.login: (context) => const LoginScreen(),
+          AppRoutes.login: (context) => const ModernLoginScreen(),
           AppRoutes.register: (context) => const RegisterScreen(),
           AppRoutes.adminDashboard: (context) => const ModernAdminDashboard(),
           AppRoutes.wardenDashboard: (context) => const WardenDashboard(),

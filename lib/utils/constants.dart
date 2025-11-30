@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-// Modern Color Palette
+// UOG Brand Color Palette
 class AppColors {
-  // Primary Colors - Modern Purple/Blue Gradient
-  static const primary = Color(0xFF6366F1); // Indigo
-  static const primaryLight = Color(0xFF818CF8);
-  static const primaryDark = Color(0xFF4F46E5);
+  // Primary Colors - UOG Blue
+  static const primary = Color(0xFF096EA2); // UOG Primary Blue
+  static const primaryLight = Color(0xFF22455B); // UOG Dark Blue-Gray
+  static const primaryDark = Color(0xFF063046); // UOG Very Dark Blue
 
-  // Secondary Colors - Teal/Cyan
-  static const secondary = Color(0xFF14B8A6);
-  static const secondaryLight = Color(0xFF2DD4BF);
-  static const secondaryDark = Color(0xFF0F766E);
+  // Secondary Colors - UOG Orange/Amber
+  static const secondary = Color(0xFFF99D48); // UOG Orange
+  static const secondaryLight = Color(0xFFFFA84B); // UOG Lighter Orange
+  static const secondaryDark = Color(0xFFE68A35);
 
   // Accent Colors
-  static const accent = Color(0xFFF59E0B); // Amber
-  static const accentLight = Color(0xFFFBBF24);
+  static const accent = Color(0xFFF99D48); // UOG Orange
+  static const accentLight = Color(0xFFFFA84B);
 
   // Status Colors
   static const success = Color(0xFF10B981);
@@ -38,16 +38,16 @@ class AppColors {
   static const border = Color(0xFFE5E7EB);
   static const borderLight = Color(0xFFF3F4F6);
 
-  // Role-based Colors - Modern Vibrant Palette
-  static const adminColor = Color(0xFF8B5CF6); // Purple
+  // Role-based Colors - UOG Theme
+  static const adminColor = Color(0xFF063046); // UOG Very Dark Blue
   static const wardenColor = Color(0xFF10B981); // Green
-  static const messManagerColor = Color(0xFFF59E0B); // Amber
+  static const messManagerColor = Color(0xFFF99D48); // UOG Orange
   static const staffColor = Color(0xFFEC4899); // Pink
-  static const studentColor = Color(0xFF3B82F6); // Blue
+  static const studentColor = Color(0xFF096EA2); // UOG Primary Blue
 
-  // Gradient Colors
-  static const gradientStart = Color(0xFF6366F1);
-  static const gradientEnd = Color(0xFF8B5CF6);
+  // Gradient Colors - UOG Theme
+  static const gradientStart = Color(0xFF096EA2); // UOG Primary Blue
+  static const gradientEnd = Color(0xFF22455B); // UOG Dark Blue-Gray
 
   // Dark Mode Colors (for future implementation)
   static const darkBackground = Color(0xFF111827);
@@ -233,23 +233,23 @@ class AppSizes {
 
 // Currency Configuration
 class AppCurrency {
-  static const String symbol = 'Rs.';
+  static const String symbol = 'PKR';
   static const String code = 'PKR';
   static const String name = 'Pakistani Rupee';
 
   static String format(double amount) {
-    return 'Rs. ${amount.toStringAsFixed(2)}';
+    return 'PKR ${amount.toStringAsFixed(2)}';
   }
 
   static String formatWithoutDecimals(double amount) {
-    return 'Rs. ${amount.toStringAsFixed(0)}';
+    return 'PKR ${amount.toStringAsFixed(0)}';
   }
 
   static String formatCompact(double amount) {
     if (amount >= 100000) {
-      return 'Rs. ${(amount / 100000).toStringAsFixed(1)}L';
+      return 'PKR ${(amount / 100000).toStringAsFixed(1)}L';
     } else if (amount >= 1000) {
-      return 'Rs. ${(amount / 1000).toStringAsFixed(1)}K';
+      return 'PKR ${(amount / 1000).toStringAsFixed(1)}K';
     }
     return format(amount);
   }
@@ -257,9 +257,9 @@ class AppCurrency {
 
 // App Strings
 class AppStrings {
-  static const appName = 'HMS';
-  static const appFullName = 'Hostel Management System';
-  static const appTagline = 'Modern Hostel Management Solution';
+  static const appName = 'UOG Boys Hostel';
+  static const appFullName = 'UOG Boys Hostel';
+  static const appTagline = 'University of Gujrat Hostel Management';
 
   // Authentication
   static const login = 'Login';
