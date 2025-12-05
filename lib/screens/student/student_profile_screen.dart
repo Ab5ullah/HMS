@@ -14,17 +14,6 @@ class StudentProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: AppColors.studentColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit Profile coming soon!')),
-              );
-            },
-            tooltip: 'Edit Profile',
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),

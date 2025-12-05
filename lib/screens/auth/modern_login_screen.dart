@@ -248,7 +248,9 @@ class _ModernLoginScreenState extends State<ModernLoginScreen>
       borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
       child: Image.asset(
         'assets/logo.png',
-
+        height: 150,
+        width: 150,
+        fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           // Fallback to gradient container with icon
           return Container(

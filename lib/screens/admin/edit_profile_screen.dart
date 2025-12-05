@@ -8,6 +8,7 @@ import '../../utils/validators.dart';
 import '../../widgets/common/modern_card.dart';
 import '../../widgets/common/modern_text_field.dart';
 import '../../widgets/common/modern_button.dart';
+import '../../models/user_role.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -114,6 +115,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
+    final user = context.read<AuthProvider>().currentUser;
+
+    // Prevent students from accessing profile edit
+    if (user?.role == UserRole.student) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Students cannot edit their profile'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+              ),
+            ),
+          );
+        }
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
